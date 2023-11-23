@@ -1,5 +1,10 @@
 import os.path
+import os
 import time
+
+import cv2
+from matplotlib import pyplot as plt
+
 
 import cv2
 from pororo import Pororo
@@ -8,6 +13,62 @@ from utils.image_util import plt_imshow, put_text
 import warnings
 
 warnings.filterwarnings('ignore')
+
+def clustering(image):
+    count = 0
+    free_space = []
+    before_min_dot = 0
+    min_dots, max_dots = [], []
+    contours = cv2.findContours(image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+    for i in range(1, len(contours)):
+        r = cv2.boundingRect(contours[i])
+        min_dots.append(r[1])
+        max_dots.append(r[1] + r[3])
+    min_dots = sorted(list(set(min_dots)))
+    max_dots = sorted(list(set(max_dots)))
+
+    for max_dot in max_dots:
+        if count == 0:
+            count += 1
+            continue
+        for min_dot in min_dots:
+            if max_dot < min_dot:
+                if before_min_dot < min_dot:
+                    if free_space and free_space[-1][1] == before_min_dot:
+                        free_space[-1] = (max_dot, free_space[-1][1])
+                    else:
+                        free_space.append((max_dot, before_min_dot))
+                break
+            if min_dot < before_min_dot:
+                continue
+            before_min_dot = min_dot
+
+    new_free_space = []
+    before = (-1, -1)
+    for fs in free_space:
+        if fs[0] - before[1] < 200 and before[1] >= 0:
+            new_free_space[-1] = (fs[0], new_free_space[-1][1])
+        else:
+            new_free_space.append(fs)
+        before = fs
+    return new_free_space
+
+
+def divide_image(image):
+    _, thresh = cv2.threshold(image, 227, 255, cv2.THRESH_TOZERO)
+    thresh_image = cv2.cvtColor(thresh, cv2.COLOR_BGR2RGB)
+    chunk_coordination = []
+    if thresh_image.shape[1] + 200 < thresh_image.shape[0]:
+        free_space = clustering(thresh)
+        before_y_axis = 0
+        for nfs in free_space:
+            chunk_coordination.append(((0, before_y_axis), (thresh_image.shape[1], nfs[0] + 10)))
+            before_y_axis = nfs[0]
+        if before_y_axis != thresh_image.shape[0]:
+            chunk_coordination.append(((0, before_y_axis), (thresh_image.shape[1], thresh_image.shape[0])))
+    else:
+        chunk_coordination.append(((0, 0), (thresh_image.shape[1], thresh_image.shape[0])))
+    return [image[cc[0][1]:cc[1][1], cc[0][0]:cc[1][0]] for cc in chunk_coordination]
 
 
 class PororoOcr:
@@ -83,12 +144,15 @@ class PororoOcr:
 
 
 if __name__ == "__main__":
-    start = time.time()
     ocr = PororoOcr()
-    # image_path = os.path.join("dataset", "target.png")
-    # image_path = os.path.join("dataset", "img.png")
     image_path = os.path.join("dataset", "aaa.png")
-    # image_path = os.path.join("dataset", "test2.jpeg")
     text = ocr.run_ocr(image_path, debug=True)
-    print(time.time() - start)
     print('Result :', text)
+
+    image_gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    print(image_gray.shape)
+
+    # chunk_images = divide_image(image_gray)
+    # for chunk_image in chunk_images:
+    #     text = ocr.run_ocr(image_path, debug=True)
+
