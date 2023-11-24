@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 from torchvision import models
-from torchvision.models.vgg import model_urls
+# from torchvision.models.vgg import model_urls  # pytorch 버전업으로 삭제
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -29,8 +29,8 @@ class Vgg16BN(torch.nn.Module):
 
     def __init__(self, pretrained: bool = True, freeze: bool = True):
         super(Vgg16BN, self).__init__()
-        model_urls["vgg16_bn"] = model_urls["vgg16_bn"].replace(
-            "https://", "http://")
+        # model_urls["vgg16_bn"] = model_urls["vgg16_bn"].replace(
+        #     "https://", "http://")  # pytorch 버전업으로 삭제
         vgg_pretrained_features = models.vgg16_bn(
             pretrained=pretrained).features
         self.slice1 = torch.nn.Sequential()
