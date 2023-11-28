@@ -7,6 +7,9 @@ from pororo.tasks import download_or_load
 from pororo.tasks.utils.base import TaskConfig, PororoSimpleBase
 from utils.image_util import plt_imshow, put_text
 import warnings
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 warnings.filterwarnings('ignore')
 
