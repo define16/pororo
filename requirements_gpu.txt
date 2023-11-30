@@ -1,6 +1,3 @@
-torch==2.1.1+cu121
-torchaudio==2.1.1+cu121
-torchvision==0.16.1+cu121
 fairseq @ git+https://github.com/define16/fairseq.git
 transformers>=4.0.0
 sentence_transformers>=0.4.1.2
@@ -17,3 +14,7 @@ g2p_en
 whoosh
 marisa-trie
 kss
+--find-links https://download.pytorch.org/whl/cu121/torch_stable.html
+torch==2.1.1+cu121
+torchaudio==2.1.1+cu121
+torchvision==0.16.1+cu121
